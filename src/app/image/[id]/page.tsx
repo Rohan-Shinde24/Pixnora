@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import mongoose from "mongoose";
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import ImageDetailClient, { type ImageDetail } from "./ImageDetailClient";
 import { siteKeywords } from "@/lib/seo";
 import { connectDB } from "@/lib/db";
@@ -77,7 +77,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function ImagePage({ params }: PageProps) {
+async function ImagePageContent({ params }: PageProps) {
   const { id } = await params;
   const image = await getImage(id);
   const initialImage: ImageDetail | null = image
@@ -116,5 +116,24 @@ export default async function ImagePage({ params }: PageProps) {
       )}
       <ImageDetailClient initialImage={initialImage} />
     </>
+  );
+}
+
+export default function ImagePage({ params }: PageProps) {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{ background: "var(--bg)", color: "var(--fg)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+            Loading image…
+          </p>
+        </div>
+      }
+    >
+      <ImagePageContent params={params} />
+    </Suspense>
   );
 }
